@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Support</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 480px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
+      height: 650px;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: #1a73e8;
+      color: white;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .agent-avatar {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .agent-info h2 { font-size: 16px; font-weight: 600; }
+    .agent-info p { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #4caf50;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    .message {
+      display: flex;
+      gap: 8px;
+      max-width: 85%;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message.bot { align-self: flex-start; }
+
+    .message-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .message.bot .message-avatar { background: #e8f0fe; }
+    .message.user .message-avatar { background: #1a73e8; color: white; }
+
+    .message-bubble {
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    .message.bot .message-bubble {
+      background: #f1f3f4;
+      color: #202124;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.user .message-bubble {
+      background: #1a73e8;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message-time {
+      font-size: 11px;
+      color: #9aa0a6;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .message.bot .message-time { text-align: left; }
+
+    .escalation-notice {
+      background: #fff3e0;
+      border: 1px solid #ff9800;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #e65100;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      align-self: center;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 10px 14px;
+      background: #f1f3f4;
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      width: fit-content;
+    }
+
+    .typing-indicator span {
+      width: 7px;
+      height: 7px;
+      background: #9aa0a6;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-5px); }
+    }
+
+    .chat-input-area {
+      padding: 16px 20px;
+      border-top: 1px solid #e8eaed;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    #messageInput {
+      flex: 1;
+      border: 1px solid #dadce0;
+      border-radius: 24px;
+      padding: 10px 16px;
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      max-height: 100px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      line-height: 1.4;
+    }
+
+    #messageInput:focus { border-color: #1a73e8; }
+    #messageInput::placeholder { color: #9aa0a6; }
+
+    #sendBtn {
+      width: 40px;
+      height: 40px;
+      background: #1a73e8;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    #sendBtn:hover { background: #1557b0; }
+    #sendBtn:active { transform: scale(0.95); }
+    #sendBtn:disabled { background: #dadce0; cursor: not-allowed; }
+
+    #sendBtn svg { width: 18px; height: 18px; }
+
+    .quick-actions {
+      padding: 0 20px 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .quick-btn {
+      background: #e8f0fe;
+      color: #1a73e8;
+      border: none;
+      border-radius: 16px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .quick-btn:hover { background: #d2e3fc; }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="agent-avatar">🤖</div>
+      <div class="agent-info">
+        <h2>Support Assistant</h2>
+        <p><span class="status-dot"></span>Online — typically replies instantly</p>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages"></div>
+
+    <div class="quick-actions" id="quickActions">
+      <button class="quick-btn" onclick="sendQuick('Track my order')">📦 Track order</button>
+      <button class="quick-btn" onclick="sendQuick('How do I return a product?')">↩ Returns</button>
+      <button class="quick-btn" onclick="sendQuick('What are your business hours?')">🕐 Hours</button>
+      <button class="quick-btn" onclick="sendQuick('How do I reset my password?')">🔑 Password</button>
+    </div>
+
+    <div class="chat-input-area">
+      <textarea
+        id="messageInput"
+        placeholder="Type your message..."
+        rows="1"
+        onkeydown="handleKeyDown(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button id="sendBtn" onclick="sendMessage()" title="Send">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let sessionId = null;
+    let isWaiting = false;
+
+    function formatTime(date) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function addMessage(role, text, time) {
+      const container = document.getElementById('chatMessages');
+      const msgTime = time || formatTime(new Date());
+
+      const wrapper = document.createElement('div');
+      wrapper.className = `message ${role}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = role === 'user' ? '👤' : '🤖';
+
+      const inner = document.createElement('div');
+
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+      bubble.textContent = text;
+
+      const timeEl = document.createElement('div');
+      timeEl.className = 'message-time';
+      timeEl.textContent = msgTime;
+
+      inner.appendChild(bubble);
+      inner.appendChild(timeEl);
+      wrapper.appendChild(avatar);
+      wrapper.appendChild(inner);
+      container.appendChild(wrapper);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function addEscalationNotice() {
+      const container = document.getElementById('chatMessages');
+      const notice = document.createElement('div');
+      notice.className = 'escalation-notice';
+      notice.innerHTML = '🔔 <strong>Heads up:</strong> A human support agent has been notified and will reach out to you shortly.';
+      container.appendChild(notice);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function showTyping() {
+      const container = document.getElementById('chatMessages');
+      const typingDiv = document.createElement('div');
+      typingDiv.id = 'typingIndicator';
+      typingDiv.className = 'message bot';
+      typingDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>`;
+      container.appendChild(typingDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function hideTyping() {
+      const el = document.getElementById('typingIndicator');
+      if (el) el.remove();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text || isWaiting) return;
+
+      input.value = '';
+      autoResize(input);
+      isWaiting = true;
+      document.getElementById('sendBtn').disabled = true;
+      document.getElementById('quickActions').style.display = 'none';
+
+      addMessage('user', text);
+      showTyping();
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, sessionId })
+        });
+
+        const data = await res.json();
+        hideTyping();
+
+        if (!res.ok) {
+          addMessage('bot', data.error || 'Something went wrong. Please try again.');
+        } else {
+          sessionId = data.sessionId;
+          addMessage('bot', data.message);
+          if (data.escalated) {
+            addEscalationNotice();
+          }
+        }
+      } catch (err) {
+        hideTyping();
+        addMessage('bot', 'Connection error. Please check your internet and try again.');
+      }
+
+      isWaiting = false;
+      document.getElementById('sendBtn').disabled = false;
+    }
+
+    function sendQuick(text) {
+      document.getElementById('messageInput').value = text;
+      sendMessage();
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+    }
+
+    // Initial greeting
+    window.addEventListener('load', () => {
+      addMessage('bot', 'Hi! I\'m your support assistant. I can help with orders, returns, account questions, and more. How can I help you today?');
+    });
+  </script>
+</body>
+</html>

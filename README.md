@@ -30,11 +30,41 @@ A production-quality MCP server that lets AI agents interact with **any PostgreS
 
 ---
 
+## 📁 Project Structure
+
+```
+mcp-db/
+├── server.py              # Entry point — wires MCP + registers all tools
+├── config.py              # All env vars and safety constants
+├── database.py            # Connection pool lifecycle (startup / shutdown)
+├── helpers.py             # Shared utilities: formatting, validation, serialization
+├── models/
+│   ├── __init__.py
+│   └── inputs.py          # Pydantic input models for all tools
+├── tools/
+│   ├── __init__.py
+│   ├── list_schemas.py    # db_list_schemas
+│   ├── list_tables.py     # db_list_tables
+│   ├── describe_table.py  # db_describe_table
+│   ├── query.py           # db_query
+│   ├── execute.py         # db_execute
+│   ├── search.py          # db_search
+│   ├── stats.py           # db_table_stats
+│   └── resources.py       # db://info MCP resource
+└── requirements.txt
+```
+
+**Each tool lives in its own file** and exposes a `register(mcp)` function. `server.py` calls each one at startup — adding or removing a tool only requires one line.
+
+---
+
 ## 🚀 Quick Start
 
-### 1. Install dependencies
+### 1. Clone and install dependencies
 
 ```bash
+git clone https://github.com/hammadnazir10/database-mcp.git
+cd database-mcp
 pip install -r requirements.txt
 ```
 
@@ -100,20 +130,16 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (Mac) o
 }
 ```
 
-### Claude Code
+### Claude Code (VS Code Extension)
 
-```bash
-claude mcp add my-database -- python /full/path/to/server.py
-```
-
-Or add to `.mcp.json` in your project root:
+Add to `.vscode/mcp.json` in your project:
 
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "my-database": {
       "command": "python",
-      "args": ["./server.py"],
+      "args": ["/full/path/to/server.py"],
       "env": {
         "DATABASE_URL": "postgresql://user:pass@localhost:5432/mydb"
       }
@@ -139,14 +165,14 @@ DATABASE_URL="postgresql://user:pass@localhost:5432/mydb" \
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `DATABASE_URL` | — | Full PostgreSQL connection URL (takes priority) |
+| `DATABASE_URL` | — | Full PostgreSQL connection URL (takes priority over PG_* vars) |
 | `PG_HOST` | `localhost` | PostgreSQL host |
 | `PG_PORT` | `5432` | PostgreSQL port |
 | `PG_USER` | `postgres` | Database user |
 | `PG_PASSWORD` | — | Database password |
 | `PG_DATABASE` | `postgres` | Database name |
-| `PG_SCHEMA` | `public` | Default schema for tools |
-| `DB_READ_ONLY` | `false` | Block all write operations |
+| `PG_SCHEMA` | `public` | Default schema for all tools |
+| `DB_READ_ONLY` | `false` | Set to `true` to block all write operations |
 | `DB_MAX_ROWS` | `100` | Maximum rows returned per query |
 | `DB_POOL_MIN` | `2` | Minimum connection pool size |
 | `DB_POOL_MAX` | `10` | Maximum connection pool size |
@@ -182,22 +208,11 @@ Once connected, try these prompts with Claude:
 
 ---
 
-## 📁 Project Structure
-
-```
-db-query-mcp-pg/
-├── server.py            # Main MCP server (7 tools)
-├── requirements.txt     # Python dependencies
-└── README.md            # This file
-```
-
----
-
 ## 🔒 Security Best Practices
 
 1. **Use a dedicated database user** with limited permissions
 2. **Enable read-only mode** (`DB_READ_ONLY=true`) for exploration
-3. **Never expose** your DATABASE_URL in public repos
+3. **Never commit** your `DATABASE_URL` — use env vars or `.env` files
 4. **Use SSL** for cloud databases (`?sslmode=require` in URL)
 5. **Limit pool size** to avoid overwhelming your database
 

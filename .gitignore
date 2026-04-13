@@ -12,15 +12,12 @@ build/
 # Virtual environment
 venv/
 env/
-.env
-.env.*
 
 # Secrets / credentials
 *.secret
 *.key
 
 # VS Code (contains local DB credentials)
-.vscode/mcp.json
 
 # OS
 .DS_Store
@@ -28,3 +25,5 @@ Thumbs.db
 
 # Logs
 *.log
+config.bat
+node_modules

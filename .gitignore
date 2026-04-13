@@ -1,5 +1,30 @@
-node_modules/
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Virtual environment
+venv/
+env/
 .env
-.loki/
+.env.*
+
+# Secrets / credentials
+*.secret
+*.key
+
+# VS Code (contains local DB credentials)
+.vscode/mcp.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
 *.log
-coverage/
